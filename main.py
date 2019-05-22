@@ -1,36 +1,36 @@
-import smtplib
-import requests
+import smtplib,sqlite3,sys,requests
+from flask import Flask,request, render_template
+from user_credentials import * 
+from constants import *
+from datetime import datetime
+from datetime import timedelta
 
-carriers = {
-	'att'		:	'@mms.att.net',
-	'tmobile'	:	'@tmomail.net',
-	'verizon'	:	'@vtext.com',
-	'sprint'	:	'@page.nextel.com',
-	'lyca'		:	'@mms.us.lycamobile.com'
-}
+DEBUG=True
+app = Flask(__name__)
+app.config["TEMPLATE_AUTO_RELOAD"] = True
 
-def send(user_message):
-    # Replace the number with your own, or consider using an argument\dict for multiple people.
-	to_number = '0000000000{}'.format(carriers['lyca'])
-	auth = ('<email address>', 'password')
-	Subject="Site Failure Update"
-	message = (f"From: {auth[0]}\nTo:{to_number}\nSubject: {Subject}")
-	message += f"\n\n{user_message}"
-	# Establish a secure session with gmail's outgoing SMTP server using your gmail account
-	server = smtplib.SMTP( "smtp.gmail.com", 587 )
-	server.starttls()
-	server.login(auth[0], auth[1])
 
-	# Send text message through SMS gateway of destination number
-	server.sendmail(auth[0], [to_number], message)
-def check_ifup(url):
-    r = requests.head(url)
-    return r.status_code != 200	
+def add_into_table(url,email,phone,carrier):
+	con = sqlite3.connect(database)
+	cur = con.cursor()
+	cur.execute("insert into mail_record values(?,?,?,?,?)",(url,email,phone,carrier,datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+	con.commit()
+	con.close()
+	return
 
-import datetime
-url = "URL to work"
-for i in range(10):
-	if check_ifup(url):
-		error_text = 'Site: \n{} \nNOT Working:\n\n{} '.format(url,datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-		send(error_text)
-		break
+@app.route('/',methods=["POST","GET"])
+def index():
+	if request.method == "POST":
+		url = request.form['site']
+		# time = request.form['time']
+		email = request.form['email']
+		phone = request.form['phone']
+		carrier = request.form['carrier']
+		add_into_table(url,email,phone,carrier)
+		return render_template('thanks.html',time = (datetime.now()+timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S"))
+
+	if request.method == "GET":
+		return render_template('index.html')
+
+if __name__ == "__main__":
+	app.run(debug=True)
