@@ -27,8 +27,9 @@
         type="url"
         name="site"
         placeholder="https://www.google.com"
-        pattern="https://.*"
+        pattern="https?://.*"
         size="30"
+        required
       />
       <!-- Time:
       <select name="time" id="time">
@@ -45,6 +46,7 @@
         placeholder="mailid@domain.com"
         pattern="[^@]+@[^@]+\.[a-zA-Z]{2,}"
         size="30"
+        required
       />
       <br />
       Phone Number :
@@ -52,10 +54,12 @@
         id="tel"
         type="tel"
         name="phone"
-        placeholder="123-456-7890"
-        pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+        placeholder="1234567890"
+        pattern="[0-9]{10}"
+        maxlength="10"
+        minlength="10"
       />
-      Carrier Name :
+      Mobile Carrier Name :
       <select name="carrier" id="carrier">
         <option value="att"> AT&T </option>
         <option value="tmobile"> T-Mobile</option>
